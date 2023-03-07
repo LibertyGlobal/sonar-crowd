@@ -25,38 +25,37 @@ import com.atlassian.crowd.model.group.Group;
 import com.atlassian.crowd.service.client.CrowdClient;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.Lists;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.LinkedList;
 import java.util.List;
 
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.assertThat;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.anyInt;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class CrowdGroupsProviderTest {
+class CrowdGroupsProviderTest {
 
   @Test
-  public void returnsNullIfTheUserWasNotFound() throws Exception {
+  void returnsNullIfTheUserWasNotFound() throws Exception {
     CrowdClient client = mock(CrowdClient.class);
-    when(client.getGroupsForNestedUser(anyString(), anyInt(), anyInt())).thenThrow(
-      new UserNotFoundException(""));
-    assertThat(new CrowdGroupsProvider(client).doGetGroups("user"), is(nullValue()));
+    when(client.getGroupsForNestedUser(anyString(), anyInt(), anyInt())).thenThrow(new UserNotFoundException(""));
+    assertThat(new CrowdGroupsProvider(client).doGetGroups("user")).isNull();
   }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void throwsSonarExceptionIfCommunicationWithCrowdFails() throws Exception {
-    CrowdClient client = mock(CrowdClient.class);
-    when(client.getGroupsForNestedUser(anyString(), anyInt(), anyInt())).thenThrow(
-      new OperationFailedException(""));
-    new CrowdGroupsProvider(client).doGetGroups("user");
+  @Test
+  void throwsSonarExceptionIfCommunicationWithCrowdFails() throws Exception {
+    assertThatThrownBy(() -> {
+      CrowdClient client = mock(CrowdClient.class);
+      when(client.getGroupsForNestedUser(anyString(), anyInt(), anyInt())).thenThrow(new OperationFailedException(""));
+      new CrowdGroupsProvider(client).doGetGroups("user");
+    }).isInstanceOf(IllegalArgumentException.class);
   }
 
   private List<Group> makeGroups(int count, int offset) {
@@ -74,23 +73,22 @@ public class CrowdGroupsProviderTest {
   }
 
   @Test
-  public void returnsGroups() throws Exception {
+  void returnsGroups() throws Exception {
     CrowdClient client = mock(CrowdClient.class);
 
     List<Group> groups = makeGroups(10);
     when(client.getGroupsForNestedUser(anyString(), anyInt(), anyInt())).thenReturn(groups);
 
-    List<String> resolvedGroups =
-      Lists.newLinkedList(new CrowdGroupsProvider(client).doGetGroups("user"));
-    assertThat(resolvedGroups.size(), is(groups.size()));
+    List<String> resolvedGroups = Lists.newLinkedList(new CrowdGroupsProvider(client).doGetGroups("user"));
+    assertThat(resolvedGroups).hasSize(groups.size());
     for (int i = 0; i < groups.size(); i++) {
-      assertThat(resolvedGroups.get(i), is(groups.get(i).getName()));
+      assertThat(resolvedGroups.get(i)).isEqualTo(groups.get(i).getName());
     }
     verify(client, times(1)).getGroupsForNestedUser(anyString(), anyInt(), anyInt());
   }
 
   @Test
-  public void performsPagination() throws Exception {
+  void performsPagination() throws Exception {
     CrowdClient client = mock(CrowdClient.class);
 
     List<Group> firstGroups = makeGroups(100);
@@ -101,12 +99,12 @@ public class CrowdGroupsProviderTest {
     when(client.getGroupsForNestedUser(anyString(), eq(0), anyInt())).thenReturn(firstGroups);
     when(client.getGroupsForNestedUser(anyString(), eq(100), anyInt())).thenReturn(secondGroups);
 
-    List<String> resolvedGroups =
-      Lists.newLinkedList(new CrowdGroupsProvider(client).doGetGroups("user"));
-    assertThat(resolvedGroups.size(), is(125));
+    List<String> resolvedGroups = Lists.newLinkedList(new CrowdGroupsProvider(client).doGetGroups("user"));
+    assertThat(resolvedGroups).hasSize(125);
     for (int i = 0; i < resolvedGroups.size(); i++) {
-      assertThat(resolvedGroups.get(i), is(allGroups.get(i).getName()));
+      assertThat(resolvedGroups.get(i)).isEqualTo(allGroups.get(i).getName());
     }
     verify(client, times(2)).getGroupsForNestedUser(anyString(), anyInt(), anyInt());
   }
+
 }

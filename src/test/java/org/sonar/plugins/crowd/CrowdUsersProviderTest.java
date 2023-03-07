@@ -23,30 +23,28 @@ import com.atlassian.crowd.exception.OperationFailedException;
 import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.crowd.model.user.User;
 import com.atlassian.crowd.service.client.CrowdClient;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.sonar.api.security.UserDetails;
 
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.assertThat;
-import static org.mockito.Matchers.anyString;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class CrowdUsersProviderTest {
+class CrowdUsersProviderTest {
 
   @Test
-  public void returnsNullIfTheUserWasNotFound() throws Exception {
+  void returnsNullIfTheUserWasNotFound() throws Exception {
     CrowdClient client = mock(CrowdClient.class);
     when(client.getUser(anyString())).thenThrow(new UserNotFoundException(""));
 
     CrowdUsersProvider provider = new CrowdUsersProvider(client);
-    assertThat(provider.doGetUserDetails("user"), is(nullValue()));
+    assertThat(provider.doGetUserDetails("user")).isNull();
   }
 
   @Test
-  public void returnsTheCrowdDisplayNameAndEmailAddress() throws Exception {
+  void returnsTheCrowdDisplayNameAndEmailAddress() throws Exception {
     CrowdClient client = mock(CrowdClient.class);
     User user = mock(User.class);
     when(user.getDisplayName()).thenReturn("display name");
@@ -55,15 +53,18 @@ public class CrowdUsersProviderTest {
 
     CrowdUsersProvider provider = new CrowdUsersProvider(client);
     UserDetails userDetails = provider.doGetUserDetails("user");
-    assertThat(userDetails, is(notNullValue()));
-    assertThat(userDetails.getEmail(), is("foo@acme.corp"));
-    assertThat(userDetails.getName(), is("display name"));
+    assertThat(userDetails).isNotNull();
+    assertThat(userDetails.getEmail()).isEqualTo("foo@acme.corp");
+    assertThat(userDetails.getName()).isEqualTo("display name");
   }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void throwsSonarExceptionIfCrowdCommunicationFails() throws Exception {
-    CrowdClient client = mock(CrowdClient.class);
-    when(client.getUser(anyString())).thenThrow(new OperationFailedException(""));
-    new CrowdUsersProvider(client).doGetUserDetails("user");
+  @Test
+  void throwsSonarExceptionIfCrowdCommunicationFails() throws Exception {
+    assertThatThrownBy(() -> {
+      CrowdClient client = mock(CrowdClient.class);
+      when(client.getUser(anyString())).thenThrow(new OperationFailedException(""));
+      new CrowdUsersProvider(client).doGetUserDetails("user");
+    }).isInstanceOf(IllegalArgumentException.class);
   }
+
 }

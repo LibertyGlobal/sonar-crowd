@@ -19,47 +19,52 @@
  */
 package org.sonar.plugins.crowd;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.sonar.api.config.internal.MapSettings;
 
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-public class CrowdConfigurationTest {
+class CrowdConfigurationTest {
 
-  @Test(expected = IllegalArgumentException.class)
-  public void crowdUrlMissing() {
-    MapSettings settings = new MapSettings();
-    new CrowdConfiguration(settings.asConfig()).getCrowdUrl();
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void applicationPasswordMissing() {
-    MapSettings settings = new MapSettings();
-    settings.setProperty(CrowdConfiguration.KEY_CROWD_URL, "http://localhost:8095");
-    new CrowdConfiguration(settings.asConfig()).getCrowdApplicationPassword();
+  @Test
+  void crowdUrlMissing() {
+    assertThatThrownBy(() -> {
+      MapSettings settings = new MapSettings();
+      new CrowdConfiguration(settings.asConfig()).getCrowdUrl();
+    }).isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
-  public void usesFallbackForUnsetApplicationName() {
+  void applicationPasswordMissing() {
+    assertThatThrownBy(() -> {
+      MapSettings settings = new MapSettings();
+      settings.setProperty(CrowdConfiguration.KEY_CROWD_URL, "http://localhost:8095");
+      new CrowdConfiguration(settings.asConfig()).getCrowdApplicationPassword();
+    }).isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void usesFallbackForUnsetApplicationName() {
     MapSettings settings = new MapSettings();
     settings.setProperty(CrowdConfiguration.KEY_CROWD_URL, "http://localhost:8095");
     settings.setProperty(CrowdConfiguration.KEY_CROWD_APP_PASSWORD, "secret");
+    new CrowdConfiguration(settings.asConfig()).getCrowdApplicationPassword();
     CrowdConfiguration crowdConfiguration = new CrowdConfiguration(settings.asConfig());
-    assertThat(crowdConfiguration.getCrowdApplicationName(), is(CrowdConfiguration.FALLBACK_NAME));
+    assertThat(crowdConfiguration.getCrowdApplicationName()).isEqualTo(CrowdConfiguration.FALLBACK_NAME);
   }
 
   @Test
-  public void createsClientProperties() {
+  void createsClientProperties() {
     MapSettings settings = new MapSettings();
     settings.setProperty(CrowdConfiguration.KEY_CROWD_URL, "http://localhost:8095");
     settings.setProperty(CrowdConfiguration.KEY_CROWD_APP_NAME, "SonarQube");
     settings.setProperty(CrowdConfiguration.KEY_CROWD_APP_PASSWORD, "secret");
     CrowdConfiguration crowdConfiguration = new CrowdConfiguration(settings.asConfig());
 
-    assertThat(crowdConfiguration.getCrowdUrl(), is("http://localhost:8095"));
-    assertThat(crowdConfiguration.getCrowdApplicationName(), is("SonarQube"));
-    assertThat(crowdConfiguration.getCrowdApplicationPassword(), is("secret"));
+    assertThat(crowdConfiguration.getCrowdUrl()).isEqualTo("http://localhost:8095");
+    assertThat(crowdConfiguration.getCrowdApplicationName()).isEqualTo("SonarQube");
+    assertThat(crowdConfiguration.getCrowdApplicationPassword()).isEqualTo("secret");
   }
 
 }
