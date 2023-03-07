@@ -1,5 +1,5 @@
 # Crowd Plugin for SonarQube
-[![Build](https://github.com/deepy/sonar-crowd/actions/workflows/ci.yml/badge.svg)](https://github.com/deepy/sonar-crowd/actions/workflows/ci.yml)
+[![Build](https://github.com/LibertyGlobal/sonar-crowd/actions/workflows/ci.yml/badge.svg)](https://github.com/LibertyGlobal/sonar-crowd/actions/workflows/ci.yml)
 
 This plugin allows the delegation of SonarQube authentication and authorization to Atlassian Crowd. 
 The previous version of this plugin has been changed to provide the same functionality as the SonarQube LDAP plugin:
@@ -91,7 +91,7 @@ Available since SonarQube 3.6.</td>
 ### Example of CROWD Configuration
 ```
 #-------------------
-# Sonar Crowd Plugin
+# SonarQube Crowd Plugin
 #-------------------
 
 
