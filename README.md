@@ -1,18 +1,18 @@
 # Crowd Plugin for SonarQube
-[![Build](https://github.com/LibertyGlobal/sonar-crowd/actions/workflows/ci.yml/badge.svg)](https://github.com/LibertyGlobal/sonar-crowd/actions/workflows/ci.yml)
+[![Build](https://github.com/LibertyGlobal/sonar-crowd/actions/workflows/ci.yml/badge.svg)](https://github.com/LibertyGlobal/sonar-crowd/actions/workflows/ci.yml) [![CodeQL](https://github.com/LibertyGlobal/sonar-crowd/actions/workflows/codeql.yml/badge.svg)](https://github.com/LibertyGlobal/sonar-crowd/actions/workflows/codeql.yml)
 
-This plugin allows the delegation of SonarQube authentication and authorization to Atlassian Crowd. 
+This plugin allows the delegation of SonarQube authentication and authorization to Atlassian Crowd.
 The previous version of this plugin has been changed to provide the same functionality as the SonarQube LDAP plugin:
 
 * Password checking against the external authentication engine.
 * Automatic synchronization of usernames and emails.
 * Automatic synchronization of relationships between users and groups (authorization).
-* Ability to authenticate against both the external and the internal authentication systems 
-(for instance, technical SonarQube user accounts do not need to be defined in Crowd as there is an automatic 
+* Ability to authenticate against both the external and the internal authentication systems
+(for instance, technical SonarQube user accounts do not need to be defined in Crowd as there is an automatic
 fallback on SonarQube engine if the user is not defined in Crowd or if the Crowd server is down).
 
-During the first authentication trial, if the password is correct, the SonarQube database is automatically 
-populated with the new user. Each time a user logs into SonarQube, the username, the email and the 
+During the first authentication trial, if the password is correct, the SonarQube database is automatically
+populated with the new user. Each time a user logs into SonarQube, the username, the email and the
 groups this user belongs to that are refreshed in the SonarQube database.
 
 # Requirements
@@ -31,7 +31,7 @@ Go to Administration > Marketplace > Search for "Crowd" > Install > Restart the 
     org.sonar.INFO  Security realm: Crowd
     ...
     o.s.p.c.CrowdRealm  Crowd configuration is valid, connection test successful.
-    
+
 1. Log into SonarQube
 
 # Configuration
@@ -98,7 +98,7 @@ Available since SonarQube 3.6.</td>
 # To first try to authenticate against the external sytem.
 # If the external system is not reachable or if the user is not defined in the external system, the authentication will be performed through the SonarQube internal system.
 sonar.security.realm=Crowd
- 
+
 # URL of the Crowd server.
 crowd.url=https://my.company.com/crowd/
 
