@@ -1,9 +1,9 @@
-#Maven
-/target
-#Eclipse
-/.project
-/.classpath
-/.settings
-#IntelliJ IDEA
+## IntelliJ IDEA
+.idea/
 *.iml
-/.idea
+
+## Maven
+target/
+
+## Docker
+.docker/

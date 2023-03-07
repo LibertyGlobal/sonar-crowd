@@ -1,0 +1,15 @@
+version: "3"
+services:
+  sonarqube:
+    image: sonarqube:9.9-community
+    hostname: sonarqube
+    container_name: sonarqube
+    volumes:
+      - .docker/data:/opt/sonarqube/data
+      - .docker/extensions:/opt/sonarqube/extensions
+      - .docker/logs:/opt/sonarqube/logs
+      - .docker/conf/sonar.properties:/opt/sonarqube/conf/sonar.properties:ro
+      - .docker/secret/sonar-secret.txt:/opt/sonarqube/secret/sonar-secret.txt:ro
+      - ./target/sonar-crowd-3.0.0-SNAPSHOT.jar:/opt/sonarqube/extensions/plugins/sonar-crowd-plugin.jar:ro
+    ports:
+      - "9000:9000"
