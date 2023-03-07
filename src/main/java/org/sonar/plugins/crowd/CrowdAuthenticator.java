@@ -19,10 +19,6 @@
  */
 package org.sonar.plugins.crowd;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.sonar.api.security.Authenticator;
-
 import com.atlassian.crowd.exception.ApplicationPermissionException;
 import com.atlassian.crowd.exception.ExpiredCredentialException;
 import com.atlassian.crowd.exception.InactiveAccountException;
@@ -30,13 +26,16 @@ import com.atlassian.crowd.exception.InvalidAuthenticationException;
 import com.atlassian.crowd.exception.OperationFailedException;
 import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.crowd.service.client.CrowdClient;
+import org.sonar.api.security.Authenticator;
+import org.sonar.api.utils.log.Logger;
+import org.sonar.api.utils.log.Loggers;
 
 /**
  * @author Evgeny Mandrikov
  */
 public class CrowdAuthenticator extends Authenticator {
 
-  private static final Logger LOG = LoggerFactory.getLogger(CrowdAuthenticator.class);
+  private static final Logger LOG = Loggers.get(CrowdAuthenticator.class);
 
   private final CrowdClient client;
 
@@ -53,38 +52,29 @@ public class CrowdAuthenticator extends Authenticator {
 
 
   public boolean authenticate(String login, String password) {
-    // Had to add that as from "not really a good idea" in
-    // https://stackoverflow.com/questions/51518781/jaxb-not-available-on-tomcat-9-and-java-9-10
-    ClassLoader threadClassLoader = Thread.currentThread().getContextClassLoader();
     try {
-      // This will enforce the crowClient to use the plugin classloader
-      Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
-      try {
-        client.authenticateUser(login, password);
-        return true;
-      } catch (UserNotFoundException e) {
-        LOG.debug("User {} not found", login);
-        return false;
-      } catch (InactiveAccountException e) {
-        LOG.debug("User {} is not active", login);
-        return false;
-      } catch (ExpiredCredentialException e) {
-        LOG.debug("Credentials of user {} have expired", login);
-        return false;
-      } catch (ApplicationPermissionException e) {
-        LOG.error("The application is not permitted to perform the requested operation"
-          + " on the crowd server", e);
-        return false;
-      } catch (InvalidAuthenticationException e) {
-        LOG.debug("Invalid credentials for user {}", login);
-        return false;
-      } catch (OperationFailedException e) {
-        LOG.error("Unable to authenticate user " + login, e);
-        return false;
-      }
-    } finally {
-      // Bring back the original class loader for the thread
-      Thread.currentThread().setContextClassLoader(threadClassLoader);
+      client.authenticateUser(login, password);
+      return true;
+    } catch (UserNotFoundException e) {
+      LOG.debug("User {} not found", login);
+      return false;
+    } catch (InactiveAccountException e) {
+      LOG.debug("User {} is not active", login);
+      return false;
+    } catch (ExpiredCredentialException e) {
+      LOG.debug("Credentials of user {} have expired", login);
+      return false;
+    } catch (ApplicationPermissionException e) {
+      LOG.error("The application is not permitted to perform the requested operation"
+        + " on the crowd server", e);
+      return false;
+    } catch (InvalidAuthenticationException e) {
+      LOG.debug("Invalid credentials for user {}", login);
+      return false;
+    } catch (OperationFailedException e) {
+      LOG.error("Unable to authenticate user " + login, e);
+      return false;
     }
   }
+
 }

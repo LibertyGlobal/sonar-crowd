@@ -19,60 +19,39 @@
  */
 package org.sonar.plugins.crowd;
 
-import static com.google.common.collect.Collections2.transform;
-
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.sonar.api.security.ExternalGroupsProvider;
-import org.sonar.api.utils.SonarException;
-
 import com.atlassian.crowd.exception.ApplicationPermissionException;
 import com.atlassian.crowd.exception.InvalidAuthenticationException;
 import com.atlassian.crowd.exception.OperationFailedException;
 import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.crowd.model.group.Group;
 import com.atlassian.crowd.service.client.CrowdClient;
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
+import org.sonar.api.security.ExternalGroupsProvider;
+import org.sonar.api.utils.log.Logger;
+import org.sonar.api.utils.log.Loggers;
 
-import javax.annotation.CheckForNull;
+import java.text.MessageFormat;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.List;
+
+import static com.google.common.collect.Collections2.transform;
 
 /**
- * External groups provider implementation for Atlassian Crowd. 
+ * External groups provider implementation for Atlassian Crowd.
  */
 public class CrowdGroupsProvider extends ExternalGroupsProvider {
 
-  private static final Logger LOG = LoggerFactory.getLogger(CrowdGroupsProvider.class);
+  private static final Logger LOG = Loggers.get(CrowdGroupsProvider.class);
   private static final int PAGING_SIZE = 100; // no idea what a reasonable size might be
-  private static final Function<Group, String> GROUP_TO_STRING = new Function<Group, String>() {
-    public String apply(Group input) {
-      return input.getName();
-    }
-  };
   private final CrowdClient crowdClient;
 
   public CrowdGroupsProvider(CrowdClient crowdClient) {
     this.crowdClient = crowdClient;
   }
 
-  private Collection<String> getGroupsForUser(String username, int start, int pageSize)
-    throws UserNotFoundException, OperationFailedException, InvalidAuthenticationException,
-    ApplicationPermissionException {
-    // Had to add that as from "not really a good idea" in
-    // https://stackoverflow.com/questions/51518781/jaxb-not-available-on-tomcat-9-and-java-9-10
-    ClassLoader threadClassLoader = Thread.currentThread().getContextClassLoader();
-    try {
-      // This will enforce the crowClient to use the plugin classloader
-      Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
-      return transform(crowdClient.getGroupsForNestedUser(username, start, pageSize), GROUP_TO_STRING);
-    } finally {
-      // Bring back the original class loader for the thread
-      Thread.currentThread().setContextClassLoader(threadClassLoader);
-    }
+  private Collection<String> getGroupsForUser(String username, int start, int pageSize) throws UserNotFoundException, OperationFailedException, InvalidAuthenticationException, ApplicationPermissionException {
+    return transform(crowdClient.getGroupsForNestedUser(username, start, pageSize), Group::getName);
   }
 
   private List<String> getGroupsForUser(String username)
@@ -110,15 +89,11 @@ public class CrowdGroupsProvider extends ExternalGroupsProvider {
     } catch (UserNotFoundException e) {
       return null; // API contract for ExternalGroupsProvider
     } catch (OperationFailedException e) {
-      throw new SonarException("Unable to retrieve groups for user" + username + " from crowd.", e);
+      throw new IllegalArgumentException(MessageFormat.format("Unable to retrieve groups for user {0} from crowd", username), e);
     } catch (ApplicationPermissionException e) {
-      throw new SonarException("Unable to retrieve groups for user" + username
-        + " from crowd. The application name and password are incorrect.", e);
+      throw new IllegalArgumentException(MessageFormat.format("Unable to retrieve groups for user {0} from crowd. The application name and password are incorrect", username), e);
     } catch (InvalidAuthenticationException e) {
-      throw new SonarException(
-        "Unable to retrieve groups for user" + username
-          + " from crowd. The application is not permitted to perform the "
-          + "requested operation on the crowd server.", e);
+      throw new IllegalArgumentException(MessageFormat.format("Unable to retrieve groups for user {0} from crowd. The application is not permitted to perform the requested operation on the crowd server", username), e);
     }
   }
 }

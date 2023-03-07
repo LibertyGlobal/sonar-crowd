@@ -25,18 +25,19 @@ import com.atlassian.crowd.exception.OperationFailedException;
 import com.atlassian.crowd.exception.UserNotFoundException;
 import com.atlassian.crowd.model.user.User;
 import com.atlassian.crowd.service.client.CrowdClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.sonar.api.security.ExternalUsersProvider;
 import org.sonar.api.security.UserDetails;
-import org.sonar.api.utils.SonarException;
+import org.sonar.api.utils.log.Logger;
+import org.sonar.api.utils.log.Loggers;
+
+import java.text.MessageFormat;
 
 /**
- * External users provider implementation for Atlassian Crowd. 
+ * External users provider implementation for Atlassian Crowd.
  */
 public class CrowdUsersProvider extends ExternalUsersProvider {
 
-  private static final Logger LOG = LoggerFactory.getLogger(CrowdUsersProvider.class);
+  private static final Logger LOG = Loggers.get(CrowdUsersProvider.class);
 
   private final CrowdClient crowdClient;
 
@@ -52,39 +53,24 @@ public class CrowdUsersProvider extends ExternalUsersProvider {
 
   public UserDetails doGetUserDetails(String username) {
     LOG.debug("Looking up user details for user {}", username);
-    // Had to add that as from "not really a good idea" in
-    // https://stackoverflow.com/questions/51518781/jaxb-not-available-on-tomcat-9-and-java-9-10
-    ClassLoader threadClassLoader = Thread.currentThread().getContextClassLoader();
     try {
-      // This will enforce the crowClient to use the plugin classloader
-      Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
-      try {
-        User user = crowdClient.getUser(username);
-        UserDetails details = new UserDetails();
-        if (user.getDisplayName() != null) {
-          details.setName(user.getDisplayName());
-        }
-        if (user.getEmailAddress() != null) {
-          details.setEmail(user.getEmailAddress());
-        }
-        return details;
-      } catch (UserNotFoundException e) {
-        return null; // API contract for ExternalUsersProvider
-      } catch (OperationFailedException e) {
-        throw new SonarException("Unable to retrieve user details for user" + username
-          + " from crowd.", e);
-      } catch (ApplicationPermissionException e) {
-        throw new SonarException(
-          "Unable to retrieve user details for user" + username
-            + " from crowd. The application is not permitted to perform the "
-            + "requested operation on the crowd server.", e);
-      } catch (InvalidAuthenticationException e) {
-        throw new SonarException("Unable to retrieve user details for user" + username
-          + " from crowd. The application name and password are incorrect.", e);
+      User user = crowdClient.getUser(username);
+      UserDetails details = new UserDetails();
+      if (user.getDisplayName() != null) {
+        details.setName(user.getDisplayName());
       }
-    } finally {
-      // Bring back the original class loader for the thread
-      Thread.currentThread().setContextClassLoader(threadClassLoader);
+      if (user.getEmailAddress() != null) {
+        details.setEmail(user.getEmailAddress());
+      }
+      return details;
+    } catch (UserNotFoundException e) {
+      return null; // API contract for ExternalUsersProvider
+    } catch (OperationFailedException e) {
+      throw new IllegalArgumentException(MessageFormat.format("Unable to retrieve user details for user {0} from crowd", username), e);
+    } catch (ApplicationPermissionException e) {
+      throw new IllegalArgumentException(MessageFormat.format("Unable to retrieve user details for user {0} from crowd. The application is not permitted to perform the requested operation on the crowd server.", username), e);
+    } catch (InvalidAuthenticationException e) {
+      throw new IllegalArgumentException(MessageFormat.format("Unable to retrieve user details for user {0} from crowd. The application name and password are incorrect.", username), e);
     }
   }
 

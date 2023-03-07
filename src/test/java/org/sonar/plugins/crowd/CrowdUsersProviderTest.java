@@ -25,9 +25,10 @@ import com.atlassian.crowd.model.user.User;
 import com.atlassian.crowd.service.client.CrowdClient;
 import org.junit.Test;
 import org.sonar.api.security.UserDetails;
-import org.sonar.api.utils.SonarException;
 
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -59,7 +60,7 @@ public class CrowdUsersProviderTest {
     assertThat(userDetails.getName(), is("display name"));
   }
 
-  @Test(expected = SonarException.class)
+  @Test(expected = IllegalArgumentException.class)
   public void throwsSonarExceptionIfCrowdCommunicationFails() throws Exception {
     CrowdClient client = mock(CrowdClient.class);
     when(client.getUser(anyString())).thenThrow(new OperationFailedException(""));

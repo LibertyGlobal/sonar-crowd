@@ -26,7 +26,6 @@ import com.atlassian.crowd.service.client.CrowdClient;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.Lists;
 import org.junit.Test;
-import org.sonar.api.utils.SonarException;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -37,7 +36,10 @@ import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class CrowdGroupsProviderTest {
 
@@ -49,7 +51,7 @@ public class CrowdGroupsProviderTest {
     assertThat(new CrowdGroupsProvider(client).doGetGroups("user"), is(nullValue()));
   }
 
-  @Test(expected = SonarException.class)
+  @Test(expected = IllegalArgumentException.class)
   public void throwsSonarExceptionIfCommunicationWithCrowdFails() throws Exception {
     CrowdClient client = mock(CrowdClient.class);
     when(client.getGroupsForNestedUser(anyString(), anyInt(), anyInt())).thenThrow(

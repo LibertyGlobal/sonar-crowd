@@ -19,43 +19,43 @@
  */
 package org.sonar.plugins.crowd;
 
-import java.util.Properties;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.atlassian.crowd.exception.ApplicationPermissionException;
+import com.atlassian.crowd.exception.InvalidAuthenticationException;
+import com.atlassian.crowd.exception.OperationFailedException;
+import com.atlassian.crowd.integration.rest.service.DefaultHttpClientProvider;
+import com.atlassian.crowd.integration.rest.service.JacksonBasicAuthRestExecutor;
+import com.atlassian.crowd.integration.rest.service.RestCrowdClient;
+import com.atlassian.crowd.service.client.ClientProperties;
+import com.atlassian.crowd.service.client.ClientPropertiesImpl;
+import com.atlassian.crowd.service.client.CrowdClient;
 import org.sonar.api.security.Authenticator;
 import org.sonar.api.security.ExternalGroupsProvider;
 import org.sonar.api.security.ExternalUsersProvider;
 import org.sonar.api.security.SecurityRealm;
-import org.sonar.api.utils.SonarException;
+import org.sonar.api.utils.log.Logger;
+import org.sonar.api.utils.log.Loggers;
 
-import com.atlassian.crowd.exception.ApplicationPermissionException;
-import com.atlassian.crowd.exception.InvalidAuthenticationException;
-import com.atlassian.crowd.exception.OperationFailedException;
-import com.atlassian.crowd.integration.rest.service.factory.RestCrowdClientFactory;
-import com.atlassian.crowd.service.client.ClientProperties;
-import com.atlassian.crowd.service.client.ClientPropertiesImpl;
-import com.atlassian.crowd.service.client.CrowdClient;
+import java.util.Properties;
 
 /**
  * Sonar security realm for Atlassian Crowd.
  */
 public class CrowdRealm extends SecurityRealm {
 
-  private static final Logger LOG = LoggerFactory.getLogger(CrowdRealm.class);
+  private static final Logger LOG = Loggers.get(CrowdRealm.class);
 
-  private final CrowdConfiguration crowdConfiguration;
+  private final CrowdConfiguration configuration;
 
-  private CrowdClient crowdClient;
+  private CrowdClient client;
   private CrowdAuthenticator authenticator;
   private CrowdUsersProvider usersProvider;
   private CrowdGroupsProvider groupsProvider;
 
   public CrowdRealm(CrowdConfiguration crowdConfiguration) {
-    this.crowdConfiguration = crowdConfiguration;
+    this.configuration = crowdConfiguration;
   }
 
-  private CrowdClient createCrowdClient(CrowdConfiguration configuration) {
+  private CrowdClient createCrowdClient() {
     Properties crowdProperties = new Properties();
     // The name that the application will use when authenticating with the Crowd server.
     crowdProperties.setProperty("application.name", configuration.getCrowdApplicationName());
@@ -79,7 +79,7 @@ public class CrowdRealm extends SecurityRealm {
     // Perhaps more things to let users to configure in the future
     // (see https://confluence.atlassian.com/display/CROWD/The+crowd.properties+file)
     ClientProperties clientProperties = ClientPropertiesImpl.newInstanceFromProperties(crowdProperties);
-    return new RestCrowdClientFactory().newInstance(clientProperties);
+    return new RestCrowdClient(JacksonBasicAuthRestExecutor.createFrom(clientProperties, new DefaultHttpClientProvider().getClient(clientProperties)));
   }
 
   @Override
@@ -89,30 +89,20 @@ public class CrowdRealm extends SecurityRealm {
 
   @Override
   public void init() {
-    this.crowdClient = createCrowdClient(crowdConfiguration);
-    this.authenticator = new CrowdAuthenticator(crowdClient);
-    this.usersProvider = new CrowdUsersProvider(crowdClient);
-    this.groupsProvider = new CrowdGroupsProvider(crowdClient);
-    // Had to add that as from "not really a good idea" in
-    // https://stackoverflow.com/questions/51518781/jaxb-not-available-on-tomcat-9-and-java-9-10
-    ClassLoader threadClassLoader = Thread.currentThread().getContextClassLoader();
+    this.client = createCrowdClient();
+    this.authenticator = new CrowdAuthenticator(client);
+    this.usersProvider = new CrowdUsersProvider(client);
+    this.groupsProvider = new CrowdGroupsProvider(client);
+
     try {
-      // This will enforce the crowClient to use the plugin classloader
-      Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
-      try {
-        crowdClient.testConnection();
-        LOG.info("Crowd configuration is valid, connection test successful.");
-      } catch (OperationFailedException e) {
-        throw new SonarException("Unable to test connection to crowd", e);
-      } catch (InvalidAuthenticationException e) {
-        throw new SonarException("Application name and password are incorrect", e);
-      } catch (ApplicationPermissionException e) {
-        throw new SonarException("The application is not permitted to perform the requested "
-            + "operation on the crowd server", e);
-      }
-    } finally {
-      // Bring back the original class loader for the thread
-      Thread.currentThread().setContextClassLoader(threadClassLoader);
+      client.testConnection();
+      LOG.info("Crowd configuration is valid, connection test successful.");
+    } catch (OperationFailedException e) {
+      throw new IllegalStateException("Unable to test connection to crowd", e);
+    } catch (InvalidAuthenticationException e) {
+      throw new IllegalStateException("Application name and password are incorrect", e);
+    } catch (ApplicationPermissionException e) {
+      throw new IllegalStateException("The application is not permitted to perform the requested operation on the crowd server", e);
     }
   }
 
