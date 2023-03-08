@@ -10,6 +10,6 @@ services:
       - .docker/logs:/opt/sonarqube/logs
       - .docker/conf/sonar.properties:/opt/sonarqube/conf/sonar.properties:ro
       - .docker/secret/sonar-secret.txt:/opt/sonarqube/secret/sonar-secret.txt:ro
-      - ./target/sonar-crowd-3.0.0-SNAPSHOT.jar:/opt/sonarqube/extensions/plugins/sonar-crowd-plugin.jar:ro
+      - ./target/sonar-crowd-plugin.jar:/opt/sonarqube/extensions/plugins/sonar-crowd-plugin.jar:ro
     ports:
       - "9000:9000"
