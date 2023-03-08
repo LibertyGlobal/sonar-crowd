@@ -18,6 +18,11 @@
   <url>https://github.com/LibertyGlobal/sonar-crowd</url>
   <inceptionYear>2023</inceptionYear>
 
+  <organization>
+    <name>Liberty Global</name>
+    <url>https://www.libertyglobal.com</url>
+  </organization>
+
   <licenses>
     <license>
       <name>GNU LGPL 3</name>
