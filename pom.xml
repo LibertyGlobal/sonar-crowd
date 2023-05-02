@@ -9,7 +9,7 @@
 
   <groupId>com.libertyglobal.sonarqube</groupId>
   <artifactId>sonar-crowd-plugin</artifactId>
-  <version>3.0.0</version>
+  <version>3.0.1-SNAPSHOT</version>
 
   <packaging>sonar-plugin</packaging>
   <name>SonarQube Crowd Plugin</name>
