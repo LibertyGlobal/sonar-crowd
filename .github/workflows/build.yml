@@ -12,4 +12,6 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
           cache: maven
-      - run: mvn --batch-mode --update-snapshots verify
+      - run: |
+          mvn --batch-mode -ntp --update-snapshots dependency:go-offline
+          mvn --batch-mode verify

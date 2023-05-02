@@ -1,0 +1,58 @@
+project:
+  name: sonar-crowd
+  description: Delegates authentication to Atlassian Crowd.
+  links:
+    homepage: https://github.com/LibertyGlobal/sonar-crowd
+  authors:
+    - Liberty Global
+  license: LGPL-3.0-only
+  inceptionYear: '2023'
+  java:
+    version: '11'
+    groupId: com.libertyglobal.sonarqube
+    artifactId: sonar-crowd-plugin
+release:
+  github:
+    overwrite: true
+    tagName: '{{projectVersion}}'
+    changelog:
+      formatted: ALWAYS
+      sort: ASC
+      links: false
+      skipMergeCommits: true
+      preset: conventional-commits
+      contributors:
+        enabled: false
+      excludeLabels:
+        - CI
+        - merge
+      labelers:
+        - label: dependencies
+          title: 'regex:^(?:deps(?:\(.*\))?!?):\s.*'
+          order: 120
+        - label: CI
+          title: 'regex:\[CI\]'
+          order: 200
+      categories:
+        - title: '⚙️  Dependencies'
+          key: dependencies
+          order: 39
+          labels:
+            - dependencies
+      replacers:
+        - search: 'CVE-(\d{4})-(\d+)'
+          replace: '[CVE-$1-$2](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-$1-$2)'
+distributions:
+  sonar-crowd-plugin:
+    type: SINGLE_JAR
+    artifacts:
+      - path: target/{{distributionName}}-{{projectVersion}}.jar
+#deploy:
+#  maven:
+#    active: ALWAYS
+#    github:
+#      sonar-crowd-plugin:
+#        active: ALWAYS
+#        url: https://maven.pkg.github.com/LibertyGlobal/sonar-crowd
+#        stagingRepositories:
+#          - target/staging-deploy
