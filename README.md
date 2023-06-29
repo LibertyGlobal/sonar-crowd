@@ -1,5 +1,5 @@
 # Crowd Plugin for SonarQube
-[![Build](https://github.com/LibertyGlobal/sonar-crowd/actions/workflows/ci.yml/badge.svg)](https://github.com/LibertyGlobal/sonar-crowd/actions/workflows/ci.yml) [![CodeQL](https://github.com/LibertyGlobal/sonar-crowd/actions/workflows/codeql.yml/badge.svg)](https://github.com/LibertyGlobal/sonar-crowd/actions/workflows/codeql.yml)
+[![Build](https://github.com/LibertyGlobal/sonar-crowd/actions/workflows/build.yml/badge.svg)](https://github.com/LibertyGlobal/sonar-crowd/actions/workflows/build.yml) [![CodeQL](https://github.com/LibertyGlobal/sonar-crowd/actions/workflows/codeql.yml/badge.svg)](https://github.com/LibertyGlobal/sonar-crowd/actions/workflows/codeql.yml)
 
 This plugin allows the delegation of SonarQube authentication and authorization to Atlassian Crowd.
 
